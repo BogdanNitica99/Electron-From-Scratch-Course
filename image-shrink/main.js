@@ -1,11 +1,68 @@
-import { app, BrowserWindow } from "electron";
+const { app, BrowserWindow, Menu, globalShortcut } = require("electron");
+
+// set env
+process.env.NODE_ENV = "development";
+
+const isDev = process.env.NODE_ENV !== "production" ? true : false;
+const isMac = process.platform === "darwin" ? true : false;
+
+let mainWindow;
 
 function createMainWindow() {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     title: "ImageShrink",
     width: 500,
     height: 600,
+    resizable: isDev,
   });
+
+  // mainWindow.loadURL(`file://${__dirname}/app/index.html`); or
+  mainWindow.loadFile("./app/index.html");
 }
 
-app.on("ready", createMainWindow);
+app.on("ready", () => {
+  createMainWindow();
+
+  const mainMenu = Menu.buildFromTemplate(menu);
+  Menu.setApplicationMenu(mainMenu);
+
+  globalShortcut.register("CmdOrCtrl+R", () => mainWindow.reload());
+  globalShortcut.register(isMac ? "Command+Alt+I" : "Ctrl+Shift+I", () =>
+    mainWindow.toggleDevTools()
+  );
+
+  // garbage collection
+  mainWindow.on("closed", () => (mainWindow = null));
+});
+
+const menu = [
+  // quick fix for MacOS menu
+  ...(isMac ? [{ role: "appMenu" }] : []),
+  {
+    label: "File",
+    submenu: [
+      {
+        label: "Quit",
+        accelerator: "CmdOrCtrl+W",
+        click: () => app.quit(),
+      },
+    ],
+  },
+];
+
+// Quit when all windows are closed
+// app.on("window-all-closed", () => {
+//   // On MacOS it is common for applications and their menu bar
+//   // to stay active until the user quits explicitly with Cmd + Q
+//   if (!isMac) {
+//     app.quit();
+//   }
+// });
+
+app.on("activate", () => {
+  // On MacOS it is common to re-create a window in the app when the
+  // dock icon is clicked and there are no other windows open.
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createMainWindow();
+  }
+});
