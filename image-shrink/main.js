@@ -12,10 +12,15 @@ let aboutWindow;
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     title: "ImageShrink",
-    width: 500,
+    width: isDev ? 700 : 500,
     height: 600,
     resizable: isDev,
+    webPreferences: { nodeIntegration: true },
   });
+
+  if (isDev) {
+    mainWindow.webContents.openDevTools();
+  }
 
   // mainWindow.loadURL(`file://${__dirname}/app/index.html`); or
   mainWindow.loadFile("./app/index.html");
