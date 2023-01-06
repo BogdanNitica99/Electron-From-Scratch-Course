@@ -7,6 +7,7 @@ const isDev = process.env.NODE_ENV !== "production" ? true : false;
 const isMac = process.platform === "darwin" ? true : false;
 
 let mainWindow;
+let aboutWindow;
 
 function createMainWindow() {
   mainWindow = new BrowserWindow({
@@ -18,6 +19,17 @@ function createMainWindow() {
 
   // mainWindow.loadURL(`file://${__dirname}/app/index.html`); or
   mainWindow.loadFile("./app/index.html");
+}
+
+function createAboutWindow() {
+  aboutWindow = new BrowserWindow({
+    title: "About ImageShrink",
+    width: 300,
+    height: 300,
+    resizable: false,
+  });
+
+  aboutWindow.loadFile("./app/about.html");
 }
 
 app.on("ready", () => {
@@ -37,7 +49,19 @@ app.on("ready", () => {
 
 const menu = [
   // quick fix for MacOS menu
-  ...(isMac ? [{ role: "appMenu" }] : []),
+  ...(isMac
+    ? [
+        {
+          label: app.name,
+          submenu: [
+            {
+              label: "About",
+              click: createAboutWindow,
+            },
+          ],
+        },
+      ]
+    : []),
   {
     label: "File",
     submenu: [
@@ -48,6 +72,32 @@ const menu = [
       },
     ],
   },
+  ...(isDev
+    ? [
+        {
+          label: "Developer",
+          submenu: [
+            { role: "reload" },
+            { role: "forcereload" },
+            { type: "separator" },
+            { role: "toggledevtools" },
+          ],
+        },
+      ]
+    : []),
+  ...(!isMac
+    ? [
+        {
+          label: "Help",
+          submenu: [
+            {
+              label: "About",
+              click: createAboutWindow,
+            },
+          ],
+        },
+      ]
+    : []),
 ];
 
 // Quit when all windows are closed
