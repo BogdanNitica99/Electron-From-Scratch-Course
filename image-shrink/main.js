@@ -1,4 +1,13 @@
-const { app, BrowserWindow, Menu, globalShortcut } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  Menu,
+  globalShortcut,
+  ipcMain,
+} = require("electron");
+
+const path = require("path");
+const os = require("os");
 
 // set env
 process.env.NODE_ENV = "development";
@@ -15,16 +24,24 @@ function createMainWindow() {
     width: isDev ? 700 : 500,
     height: 600,
     resizable: isDev,
-    webPreferences: { nodeIntegration: true },
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+    },
   });
+
+  ipcMain.handle("outputPath", () => path.join(os.homedir(), "imageshrink"));
 
   if (isDev) {
     mainWindow.webContents.openDevTools();
   }
 
-  // mainWindow.loadURL(`file://${__dirname}/app/index.html`); or
-  mainWindow.loadFile("./app/index.html");
+  mainWindow.loadURL(`file://${__dirname}/app/index.html`); //or
+  // mainWindow.loadFile("./app/index.html");
 }
+
+ipcMain.on("imgPathAndQuality", (e, options) => {
+  console.log(options);
+});
 
 function createAboutWindow() {
   aboutWindow = new BrowserWindow({
