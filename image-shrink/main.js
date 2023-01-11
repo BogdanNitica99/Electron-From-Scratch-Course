@@ -1,13 +1,18 @@
+const path = require("path");
+const os = require("os");
+
 const {
   app,
   BrowserWindow,
   Menu,
   globalShortcut,
   ipcMain,
+  shell,
 } = require("electron");
-
-const path = require("path");
-const os = require("os");
+const imagemin = require("imagemin");
+const imageminMozjpeg = require("imagemin-mozjpeg");
+const imageminPngQuant = require("imagemin-pngquant");
+const slash = require("slash");
 
 // set env
 process.env.NODE_ENV = "development";
@@ -17,6 +22,8 @@ const isMac = process.platform === "darwin" ? true : false;
 
 let mainWindow;
 let aboutWindow;
+
+let outputPath = path.join(os.homedir(), "imageshrink");
 
 function createMainWindow() {
   mainWindow = new BrowserWindow({
@@ -29,7 +36,7 @@ function createMainWindow() {
     },
   });
 
-  ipcMain.handle("outputPath", () => path.join(os.homedir(), "imageshrink"));
+  ipcMain.handle("outputPath", () => outputPath);
 
   if (isDev) {
     mainWindow.webContents.openDevTools();
@@ -40,8 +47,27 @@ function createMainWindow() {
 }
 
 ipcMain.on("imgPathAndQuality", (e, options) => {
-  console.log(options);
+  shrinkImage(options, outputPath);
 });
+
+async function shrinkImage({ imgPath, quality }, dest) {
+  try {
+    const pngQuality = quality / 100;
+
+    // slash is used for Windows backwards slash in paths
+    const files = await imagemin([slash(imgPath)], {
+      destination: dest,
+      plugins: [
+        imageminMozjpeg({ quality }),
+        imageminPngQuant({ quality: [pngQuality, pngQuality] }),
+      ],
+    });
+
+    shell.openPath(dest);
+  } catch (error) {
+    console.log(error);
+  }
+}
 
 function createAboutWindow() {
   aboutWindow = new BrowserWindow({
