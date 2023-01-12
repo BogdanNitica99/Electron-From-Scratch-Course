@@ -4,10 +4,13 @@ const func = async () => {
     await window.apis.getOutputPath();
 };
 
+func();
+
 const form = document.getElementById("image-form");
 const slider = document.getElementById("slider");
 const img = document.getElementById("img");
 
+// On Submit
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -17,4 +20,7 @@ form.addEventListener("submit", async (e) => {
   await window.apis.getImgPathAndQuality({ imgPath, quality });
 });
 
-func();
+// On Done
+window.apis.onDone(() => {
+  M.toast({ html: `Image resized to ${slider.value}% quality` });
+});

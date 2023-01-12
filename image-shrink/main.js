@@ -15,7 +15,7 @@ const imageminPngQuant = require("imagemin-pngquant");
 const slash = require("slash");
 
 // set env
-process.env.NODE_ENV = "development";
+process.env.NODE_ENV = "production";
 
 const isDev = process.env.NODE_ENV !== "production" ? true : false;
 const isMac = process.platform === "darwin" ? true : false;
@@ -30,6 +30,7 @@ function createMainWindow() {
     title: "ImageShrink",
     width: isDev ? 700 : 500,
     height: 600,
+    icon: `${__dirname}/assets/icons/Icon_256x256.png`,
     resizable: isDev,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -64,6 +65,8 @@ async function shrinkImage({ imgPath, quality }, dest) {
     });
 
     shell.openPath(dest);
+
+    mainWindow.webContents.send("image:done");
   } catch (error) {
     console.log(error);
   }
